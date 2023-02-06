@@ -17,8 +17,8 @@
 
 # Main menu navigation
 menu:
-  # Home: /
-  # Archives: /archives
+  Home: /
+  Archives: /archives
   # Tags: /tags
   # Categories: /categories
   #XXX: /xxx
@@ -135,7 +135,7 @@ cdn:
 
 # Post info settings
 # ---------------
-avatar:
+avatar: https://avatars.githubusercontent.com/u/26704670?v=4
 
 top_img: true # false or url of img
 
@@ -161,7 +161,7 @@ post_copyright:
 
 # Please see doc for more details: https://molunerfinn.com/hexo-theme-melody-doc/theme-config.html#auto-excerpt
 # auto_excerpt:
-#   enable: false
+#   enable: true
 #   length: 150
 
 # slide
