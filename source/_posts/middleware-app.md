@@ -64,7 +64,7 @@ class App {
 简单分析一下这里的关键点，`next` 函数如何注入，首先 `next` 函数调用没有参数，所以上面的 `() => runMiddleware(index + 1)` 中 `()` 没有参数，调用 `next` 函数时需要调用进行下一个中间件的执行，所以需要自调用。
 
 我们来看一下效果：
-![](/assets/result.gif)
+![](/assets/middleware-app-result.gif)
 
 ## 队列实现
 
