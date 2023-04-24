@@ -84,13 +84,13 @@ class App {
 
     run() {
         const runMiddleware = () => {
-        const middleware = this.queue.shift();
-        // 如果当前队列没有中间件了，则返回
-        if (!middleware) {
-            return;
-        }
-        // 中间件中调用的 next 函数就是下面的 () => runMiddleware()
-        middleware(() => runMiddleware());
+            const middleware = this.queue.shift();
+            // 如果当前队列没有中间件了，则返回
+            if (!middleware) {
+                return;
+            }
+            // 中间件中调用的 next 函数就是下面的 () => runMiddleware()
+            middleware(() => runMiddleware());
         };
         runMiddleware();
     }
