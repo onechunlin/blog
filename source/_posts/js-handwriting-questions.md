@@ -298,6 +298,190 @@ app.run(); // 调用后 1s 后输出 'hello'
 
 详细的过程和解答可参考[用 JS 实现一个简单支持中间件的 APP](/2023/02/11/middleware-app/)
 
+### 实现函数原型上的 call 方法
+
+```js
+Function.prototype.call2 = function(context, ...args) {
+  // 如果传递的第一个参数是一个基本类型的值（如数字、字符串等），
+  // 为避免发生错误，手动调用 `Object()` 函数进行转换。
+  const ctx = context ? Object(context) : window; 
+  // 创建一个唯一的 symbol 属性名，避免与 ctx 的属性名冲突
+  const key = Symbol('key'); 
+  // 将当前函数对象绑定到 ctx 对象上的 key 属性中
+  ctx[key] = this;
+  // 调用 context 对象上的 key 函数，并传递参数 args
+  const result = ctx[key](...args);
+  // 删除 ctx 对象上的 key 属性
+  delete ctx[key];
+  // 返回结果
+  return result;
+}
+
+const obj = {
+  name: 'sam',
+};
+
+function fn() {
+  console.log(this.name);
+}
+fn.call2(obj); // 输出 sam
+```
+
+`apply` 和 `call` 类似，以数组形式传入参与即可。
+
+### 实现函数原型上的 bind 方法
+
+需要注意的是 `bind` 函数改变 this 指向时可以指定参数
+
+```js
+Function.prototype.bind2 = function(context, ...args) {
+  // 将当前函数对象保存到 self 变量中
+  const self = this;
+  return function(...arg) {
+    // 在新函数中将 this 绑定到 context 上下文对象
+    return self.apply(context, [...args, ...arg]);
+  }
+}
+
+const obj = {
+  name: 'sam',
+};
+
+function fn(...args) {
+  const sum = args.reduce((prev, cur) => prev + cur)
+  console.log(this.name, sum);
+}
+const bindFn = fn.bind2(obj, 1, 2);
+bindFn(3); // 输出 sam 6
+```
+
+### 实现 instance of 关键字
+
+```js
+function instanceOf(instance, constructor) {
+  let proto = instance.__proto__;
+  while (proto) {
+    // 判断构造函数的 prototype 属性是否出现在实例的原型链上
+    if (proto === constructor.prototype) {
+      return true;
+    }
+    proto = proto.__proto__;
+  }
+  return false;
+}
+
+const arr = [];
+console.log(instanceOf(arr, Array)); // true
+```
+
+### 封装一个带超时和重试的 request 函数
+
+基于浏览器原生的 `fetch` 封装一个带超时和重试的业务 `request` 函数，要求如下：
+
+- 函数支持配置超时时间和重试次数
+- 超时和发起请求是竞争关系，即两者只能成功一个。**当请求超时，如果没有超过重试次数，则发起下一轮的请求**；请求成功时返回结果，清除定时器
+- 请求超时需要取消正在发起的请求，再重新发起下一轮的请求
+
+```js
+function request(url, options) {
+  const { retry, timeout, ...restOptions } = options;
+
+  return new Promise((resolve, reject) => {
+    // 超时计时器 ID
+    let timer;
+    // 当前已重试次数
+    let count = 0;
+
+    const doRequest = () => {
+      // 使用 AbortController 来实现请求的取消
+      const controller = new AbortController();
+      const signal = controller.signal;
+
+      // 超时拒绝的 Promise
+      const timeoutPromise = new Promise((_, rej) => {
+        timer = setTimeout(() => {
+          // 超时则取消请求
+          controller.abort();
+          rej(new Error(`Timeout of ${timeout}ms exceeded`));
+        }, timeout);
+      });
+      // 发起请求的 Promise
+      const fetchPromise = fetch(url, { ...restOptions, signal });
+
+      // 通过 Promise.race 来实现超时和请求成功的竞争条件
+      Promise.race([timeoutPromise, fetchPromise])
+        .then((res) => {
+          // 请求成功则停掉计时器
+          clearTimeout(timer);
+          resolve(res);
+        })
+        .catch((e) => {
+          // 如果当前重试次数少于设定的次数，则重试
+          if (count < retry) {
+            count++;
+            doRequest();
+          } else {
+            // 否则返回错误
+            reject(e);
+          }
+        });
+    };
+
+    doRequest();
+  });
+} 
+```
+
+可以通过 Node 搭建一个简单的服务来验证，验证代码：
+
+```js
+// 前端
+request("http://127.0.0.1:3000", { retry: 3, timeout: 3000 })
+  .then((res) => res.text())
+  .then((res) => {
+    console.log("🚀 ~ file: index.html:59 ~ res:", res);
+  });
+
+
+// Node 代码
+const http = require('http');
+const fs = require('fs');
+const path = require('path');
+
+const hostname = '127.0.0.1';
+const port = 3000;
+let count = 0;
+
+const server = http.createServer((req, res) => {
+  if (req.url === '/page') {
+    const filePath = path.join(__dirname, 'index.html');
+    fs.readFile(filePath, (err, data) => {
+      if (err) {
+        res.statusCode = 500;
+        res.end(`Error getting the file: ${err.message}`);
+      } else {
+        res.setHeader('Content-Type', 'text/html');
+        res.end(data);
+      }
+    });
+  } else {
+    count++;
+    res.statusCode = 200;
+    res.setHeader('Content-Type', 'text/plain');
+    const timeout = (count % 5) * 1000;
+    setTimeout(() => {
+      res.end('Hello World\n');
+    }, timeout);
+  }
+});
+
+server.listen(port, hostname, () => {
+  console.log(`Server running at http://${hostname}:${port}/`);
+});
+```
+
+访问 `http://127.0.0.1:3000/page` 即可验证，可通过调整 `timeout` 的值来实现不同场景的测试
+
 ## 总结
 
 本文介绍了一些常见的 JS 手写题，包括防抖、节流、数据类型判断、Promise 限制等。这些手写题和细节问题都是我们在日常开发中遇到的常见问题，在面试中也常常被问到。通过学习和掌握这些手写题，可以加深对 JS 基础知识的理解和应用，提高面试和实际开发的能力，帮助我们在实际工作中更加得心应手。
