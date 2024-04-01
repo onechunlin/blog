@@ -20,6 +20,7 @@
   },
   "scripts": {
     "dev": "hexo server -p $PORT",
-    "build": "hexo generate"
+    "build": "hexo generate",
+    "publish": "docker build --platform linux/amd64 -t registry.cn-beijing.aliyuncs.com/onechunlin/blog ."
   }
 }
