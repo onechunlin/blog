@@ -21,6 +21,7 @@
   "scripts": {
     "dev": "hexo server -p $PORT",
     "build": "hexo generate",
-    "publish": "docker build --platform linux/amd64 -t registry.cn-beijing.aliyuncs.com/onechunlin/blog ."
+    "new": "hexo new",
+    "build-image": "docker build --platform linux/amd64 -t registry.cn-beijing.aliyuncs.com/onechunlin/blog ."
   }
 }

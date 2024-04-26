@@ -1,0 +1,100 @@
+---
+title: 日常开发提效指南-命令行篇
+date: 2024-01-21 21:22:31
+tags:
+---
+
+# 前言
+
+推荐一些日常开发中命令行常用的提效方式~
+
+# 终端推荐
+
+推荐使用 iTerm2 搭配 ohmyzsh 使用，ohmyzsh 有很多好用的插件，具体安装请查看[教程](https://juejin.cn/post/6844903939121348616)。建议安装 zsh-autosuggestion 和 zsh-syntax-highlighting 插件，配合使用体验更好
+
+# 快捷键
+
+列举常用的命令行快捷键
+
+## 命令查找
+1. 按字符串寻找历史命令
+```bash
+ctrl + R    # 按字符串寻找历史命令
+```
+![效果展示](/assets/daily-efficiency/search.gif)
+
+
+2. 上/下一条命令
+```bash
+ctrl + P（键盘↑）    # 上一条命令
+ctrl + N（键盘↓）    # 下一条命令
+```
+![效果展示](/assets/daily-efficiency/pre-next.gif)
+
+## 光标移动
+```bash
+ctrl + A    # 跳至行首
+ctrl + E    # 跳至行尾
+```
+
+## 编辑相关
+```bash
+# 编辑命令
+Tab         # 自动补齐
+ 
+# 删除相关
+ctrl + U    # 删除整行
+ctrl + W    # 删除光标前的单词
+ctrl + K    # 清空至行尾
+ 
+# 信息展示
+ctrl + L    # 清屏
+PageUp      # 上一页信息
+PageDown    # 下一页信息
+```
+
+## 目录相关
+```bash
+cd            # 切换目录
+pwd           # 显示当前目录完整路径
+ls（ls -a）    # 查看目录下的信息（包括隐藏文件）
+mkdir         # 创建目录
+touch         # 创建文件
+cp（cp -r）    # 复制文件（文件夹）
+mv            # 移动/重命名文件夹和目录
+rm（rm -rf）   # 删除文件（目录）
+```
+
+# 命令别名
+将常用的命令添加别名缩写，减轻日常的输入负担
+
+## 配置别名
+这里以咱们开发中最常用的 git 命令为例：
+
+1. 运行 vim ~/.zshrc，添加别名配置，语法如下
+```bash
+alias 别名='实际的命令'
+```
+2. 例如使用 gs 来替代 git status，则按如下配置
+```bash
+alias gs='git status'
+```
+3. 配置完成后，ESC 退出插入模式，输入 :wq 保存并退出
+4. 运行 source ~/.zshrc 使命令生效
+![效果展示](/assets/daily-efficiency/alias.gif)
+
+## 推荐别名
+下面是日常使用过程中比较常用的几个别名，当然可以按自己的习惯进行更改
+```bash
+alias ga='git add'
+alias gs='git status'
+alias gco='git checkout'
+alias gcom='git commit -m'
+alias gp='git push'
+alias gpl='git pull'
+alias gm='git merge'
+alias gl='git log'
+alias gcp='git cherry-pick'
+alias gbs='git branch --sort=-committerdate'
+alias gbd='git branch -D'
+```
