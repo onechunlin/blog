@@ -1,5 +1,5 @@
 ---
-title: 程序员使用 ChatGPT 的方式（命令行版）
+title: 程序员使用ChatGPT的方式（命令行版）
 date: 2023-03-12 13:52:40
 tags:
 ---
