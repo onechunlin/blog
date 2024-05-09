@@ -482,6 +482,116 @@ server.listen(port, hostname, () => {
 
 访问 `http://127.0.0.1:3000/page` 即可验证，可通过调整 `timeout` 的值来实现不同场景的测试
 
+### 实现 Promise 队列
+给出如下的一个使用示例，要求每次按顺序输出 3 4 5，要你实现这个类：
+```js
+const queue = new Queue(async (param) => {
+    await new Promise(resolve => setTimeout(resolve, 1000 * Math.random()));
+    return param + 2;
+});
+ 
+queue.call(1).then(console.log);
+queue.call(2).then(console.log);
+queue.call(3).then(console.log);
+// Expected output
+// 3
+// 4
+// 5
+```
+这里的思路是利用 Promise 链式调用的特点，来实现一个队列的效果，先来看最终代码：
+
+```js
+class Queue {
+    constructor(worker) {
+        this.worker = worker
+        this.currentPromise = Promise.resolve()
+    }
+
+    call(param) {
+        this.currentPromise = this.currentPromise.then(() => this.worker(param))
+        return this.currentPromise
+    }
+}
+```
+主要就是利用 promise 的特性，使用 then 将他们链接成一条链表：Promise.resolve() => this.worker(1) => console.log => this.worker(2) => console.log => this.worker(3) => console.log
+
+### 手写Promise.all、Promise.race、Promise.allSettled
+```js
+function promiseAll(promises) {
+  return new Promise((resolve, reject) => {
+    let results = [];
+    let completed = 0;
+
+    promises.forEach((promise, i) => {
+      promise.then((result) => {
+        results[i] = result;
+        completed += 1;
+
+        if (completed === promises.length) {
+          resolve(results);
+        }
+      }).catch(reject);
+    });
+  });
+}
+
+function promiseRace(promises) {
+  return new Promise((resolve, reject) => {
+    promises.forEach((promise) => {
+      promise.then(resolve).catch(reject);
+    });
+  });
+}
+
+function promiseAllSettled(promises) {
+  return new Promise((resolve) => {
+    let results = [];
+    let completed = 0;
+
+    promises.forEach((promise, i) => {
+      promise.then((result) => {
+        results[i] = { status: 'fulfilled', value: result };
+      }).catch((error) => {
+        results[i] = { status: 'rejected', reason: error };
+      }).finally(() => {
+        completed += 1;
+
+        if (completed === promises.length) {
+          resolve(results);
+        }
+      });
+    });
+  });
+}
+```
+
+### 实现 new 操作符
+```js
+function myNew(constructor, ...args) {
+  // 创建一个对象并将原型执行 constructor 的 prototype
+  const obj = Object.create(constructor.prototype)
+  const res = constructor.apply(obj, args)
+  return res instanceof Object ? res : obj
+}
+```
+
+### 深度拷贝
+```js
+function deepCopy(obj) {
+  if (typeof obj !== 'object' || obj === null) {
+    return obj;
+  }
+
+  const copy = Array.isArray(obj) ? [] : {};
+
+  Object.keys(obj).forEach(key => {
+    copy[key] = deepCopy(obj[key]);
+  });
+
+  return copy;
+}
+```
+
 ## 总结
 
 本文介绍了一些常见的 JS 手写题，包括防抖、节流、数据类型判断、Promise 限制等。这些手写题和细节问题都是我们在日常开发中遇到的常见问题，在面试中也常常被问到。通过学习和掌握这些手写题，可以加深对 JS 基础知识的理解和应用，提高面试和实际开发的能力，帮助我们在实际工作中更加得心应手。
