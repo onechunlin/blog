@@ -581,6 +581,9 @@ function deepCopy(obj) {
   if (typeof obj !== 'object' || obj === null) {
     return obj;
   }
+  // 处理 Date 和 RegExp
+  if (obj instanceof Date) return new Date(obj);
+  if (obj instanceof RegExp) return new RegExp(obj);
 
   const copy = Array.isArray(obj) ? [] : {};
 
@@ -590,6 +593,13 @@ function deepCopy(obj) {
 
   return copy;
 }
+```
+
+### 查找网页中标签类型数量
+这道题不要想复杂了，就是使用 `querySelectorAll('*')` 然后遍历出 nodeName 去重即可
+```js
+const tagSet = new Set([...document.querySelectorAll('*')].map(n => n.nodeName))
+console.log(tagSet.size)
 ```
 
 ## 总结
